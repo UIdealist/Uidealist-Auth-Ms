@@ -10,50 +10,6 @@ info:
   termsOfService: http://swagger.io/terms/
   version: "1.0"
 paths:
-  /v1/brainstorm/:
-    post:
-      consumes:
-      - application/json
-      description: Create a new brainstorm with some ideas
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: ok
-          schema:
-            type: string
-      summary: Create a new brainstorm
-      tags:
-      - Brainstorm
-  /v1/idea/:
-    get:
-      consumes:
-      - application/json
-      description: Get all projects owned by the user
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ok
-          schema:
-            type: string
-      summary: Get all projects owned by the user
-      tags:
-      - Project
-    post:
-      consumes:
-      - application/json
-      description: Create a new project
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: ok
-          schema:
-            type: string
-      summary: Create a new project
-      tags:
-      - Project
   /v1/token/renew:
     post:
       consumes:

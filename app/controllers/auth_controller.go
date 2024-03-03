@@ -15,12 +15,13 @@ import (
 )
 
 // UserSignUp method to create a new user.
-// @Description Create a new user.
-// @Summary create a new user
+// @Description Create a new user given username, email and password
+// @Summary Create a new user
 // @Tags User
 // @Accept json
 // @Produce json
 // @Param username body string true "User Username"
+// @Param email body string true "User Email"
 // @Param password body string true "User Password"
 // @Success 201 {string} status "ok"
 // @Router /v1/user/sign/up [post]
@@ -73,13 +74,13 @@ func UserSignUp(c *fiber.Ctx) error {
 }
 
 // UserSignIn method to auth user and return access and refresh tokens.
-// @Description Auth user and return access and refresh token.
-// @Summary auth user and return access and refresh token
+// @Description Log In user and return access and refresh token.
+// @Summary User Sign In
 // @Tags User
 // @Accept json
 // @Produce json
-// @Param email body string true "User Email"
-// @Param password body string true "User Password"
+// @Param username body string true "User's username"
+// @Param password body string true "User's password'"
 // @Success 200 {string} status "ok"
 // @Router /v1/user/sign/in [post]
 func UserSignIn(c *fiber.Ctx) error {
@@ -159,7 +160,7 @@ func UserSignIn(c *fiber.Ctx) error {
 	}
 
 	// Return status 200 OK.
-	return c.JSON(fiber.Map{
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"error": false,
 		"msg":   "Successfully signed in",
 		"tokens": fiber.Map{
@@ -169,13 +170,13 @@ func UserSignIn(c *fiber.Ctx) error {
 	})
 }
 
-// UserSignOut method to de-authorize user and delete refresh token from Redis.
-// @Description De-authorize user and delete refresh token from Redis.
-// @Summary de-authorize user and delete refresh token from Redis
+// UserSignOut De-authorize user and delete refresh token from cache.
+// @Description De-authorize user and delete refresh token from cache.
+// @Summary De-authorize user
 // @Tags User
 // @Accept json
 // @Produce json
-// @Success 204 {string} status "ok"
+// @Success 200 {string} status "ok"
 // @Security ApiKeyAuth
 // @Router /v1/user/sign/out [post]
 func UserSignOut(c *fiber.Ctx) error {
@@ -215,8 +216,8 @@ func UserSignOut(c *fiber.Ctx) error {
 		})
 	}
 
-	// Return status 204 no content.
-	return c.Status(fiber.StatusAccepted).JSON(fiber.Map{
+	// Return status 200, sign out successfull.
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"error": false,
 		"code":  repository.LOGGED_OUT,
 		"msg":   "User logged out",
@@ -224,8 +225,8 @@ func UserSignOut(c *fiber.Ctx) error {
 }
 
 // RenewTokens method for renew access and refresh tokens.
-// @Description Renew access and refresh tokens.
-// @Summary renew access and refresh tokens
+// @Description Renew access token
+// @Summary Renew access and refresh tokens
 // @Tags Token
 // @Accept json
 // @Produce json

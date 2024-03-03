@@ -14,7 +14,7 @@ func OpenDBConnection() {
 	// Define Database connection variables.
 	var (
 		db  *gorm.DB
-		err error
+		err error = nil
 	)
 
 	// Get DB_TYPE value from .env file.
@@ -28,16 +28,15 @@ func OpenDBConnection() {
 		db, err = MySQLConnection()
 	}
 
-	if err != nil {
+	if err != nil || db == nil {
+		println("Could not create database connection")
 		return
 	}
 
-	// Set database connection and configure advanced queries
-	// for future operations.
 	DB = db
 
 	// AutoMigrate all models.
-	db.AutoMigrate(
+	err = db.AutoMigrate(
 		&models.Member{}, // Member model
 
 		&models.User{},          // User model
@@ -47,5 +46,10 @@ func OpenDBConnection() {
 		&models.TeamRole{},      // TeamRole model
 		&models.TeamHasMember{}, // TeamHasMember model
 	)
+
+	if err != nil {
+		println("Could not migrate database")
+		return
+	}
 
 }

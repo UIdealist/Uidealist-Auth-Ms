@@ -18,3 +18,4 @@ tmp/
 hosts.ini
 *.out
 .env
+.env.*

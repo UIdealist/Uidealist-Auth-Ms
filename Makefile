@@ -1,10 +1,8 @@
-.PHONY: clean critic security lint test build run
-
-APP_NAME = apiserver
+# Common variables for this application
+APP_NAME = uidealist-auth-ms
 BUILD_DIR = $(PWD)/build
 MIGRATIONS_FOLDER = $(PWD)/platform/migrations
-
-# DATABASE_URL = postgres://postgres:password@localhost/postgres?sslmode=disable
+DATABASE_URL=
 
 clean:
 	rm -rf ./build
@@ -22,12 +20,7 @@ test: clean critic security lint
 	go test -v -timeout 30s -coverprofile=cover.out -cover ./...
 	go tool cover -func=cover.out
 
-build: test
-	CGO_ENABLED=0 go build -ldflags="-w -s" -o $(BUILD_DIR)/$(APP_NAME) main.go
-
-run: swag build
-	$(BUILD_DIR)/$(APP_NAME)
-
+# Migrations commands (Define DATABASE_URL)
 migrate.up:
 	migrate -path $(MIGRATIONS_FOLDER) -database "$(DATABASE_URL)" up
 
@@ -37,29 +30,30 @@ migrate.down:
 migrate.force:
 	migrate -path $(MIGRATIONS_FOLDER) -database "$(DATABASE_URL)" force $(version)
 
-docker.run: docker.network docker.postgres swag docker.fiber docker.redis # migrate.up
-
+# Main Application docker commands
+NETWORK_NAME=dev-network-${APP_NAME}
 docker.network:
-	docker network inspect dev-network >/dev/null 2>&1 || \
-	docker network create -d bridge dev-network
+	docker network create -d bridge ${NETWORK_NAME}
 
 docker.network.destroy:
-	docker network rm dev-network
+	docker network rm ${NETWORK_NAME}
 
 docker.fiber.build:
-	docker build -t fiber .
+	docker build -t ${APP_NAME} .
 
 docker.fiber: docker.fiber.build
 	docker run --rm -d \
-		--name cgapp-fiber \
-		--network dev-network \
+		--name ${APP_NAME} \
+		--network ${NETWORK_NAME} \
+		--env-file .env \
 		-p 5000:5000 \
-		fiber
+		${APP_NAME}
 
+# Database for test purposes
 docker.postgres:
 	docker run --rm -d \
-		--name cgapp-postgres \
-		--network dev-network \
+		--name ${APP_NAME}-postgres \
+		--network ${NETWORK_NAME} \
 		-e POSTGRES_USER=postgres \
 		-e POSTGRES_PASSWORD=password \
 		-e POSTGRES_DB=postgres \
@@ -67,23 +61,23 @@ docker.postgres:
 		-p 5432:5432 \
 		postgres
 
+# Redis cache for test purposes
 docker.redis:
 	docker run --rm -d \
-		--name cgapp-redis \
-		--network dev-network \
+		--name ${APP_NAME}-redis \
+		--network ${NETWORK_NAME} \
 		-p 6379:6379 \
 		redis
 
-docker.stop: docker.stop.fiber docker.stop.postgres docker.stop.redis
-
+# Stop commands for containers
 docker.stop.fiber:
-	docker stop cgapp-fiber
+	docker stop ${APP_NAME}
 
 docker.stop.postgres:
-	docker stop cgapp-postgres
+	docker stop ${APP_NAME}-postgres
 
 docker.stop.redis:
-	docker stop cgapp-redis
+	docker stop ${APP_NAME}-redis
 
-swag:
-	swag init
+docker.run: docker.postgres docker.redis docker.fiber
+docker.stop: docker.stop.fiber docker.stop.postgres docker.stop.redis
