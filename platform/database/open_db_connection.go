@@ -37,14 +37,8 @@ func OpenDBConnection() {
 
 	// AutoMigrate all models.
 	err = db.AutoMigrate(
-		&models.Member{}, // Member model
-
-		&models.User{},          // User model
-		&models.AnonymousUser{}, // AnonymousUser model
-		&models.Team{},          // Team model
-
-		&models.TeamRole{},      // TeamRole model
-		&models.TeamHasMember{}, // TeamHasMember model
+		&models.AuthCredentials{},
+		&models.AuthProvider{},
 	)
 
 	if err != nil {

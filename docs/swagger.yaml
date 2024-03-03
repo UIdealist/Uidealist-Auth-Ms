@@ -14,7 +14,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Renew access and refresh tokens.
+      description: Renew access token
       parameters:
       - description: Refresh token
         in: body
@@ -31,22 +31,22 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
-      summary: renew access and refresh tokens
+      summary: Renew access and refresh tokens
       tags:
       - Token
   /v1/user/sign/in:
     post:
       consumes:
       - application/json
-      description: Auth user and return access and refresh token.
+      description: Log In user and return access and refresh token.
       parameters:
-      - description: User Email
+      - description: User's username
         in: body
-        name: email
+        name: username
         required: true
         schema:
           type: string
-      - description: User Password
+      - description: User's password'
         in: body
         name: password
         required: true
@@ -59,35 +59,41 @@ paths:
           description: ok
           schema:
             type: string
-      summary: auth user and return access and refresh token
+      summary: User Sign In
       tags:
       - User
   /v1/user/sign/out:
     post:
       consumes:
       - application/json
-      description: De-authorize user and delete refresh token from Redis.
+      description: De-authorize user and delete refresh token from cache.
       produces:
       - application/json
       responses:
-        "204":
+        "200":
           description: ok
           schema:
             type: string
       security:
       - ApiKeyAuth: []
-      summary: de-authorize user and delete refresh token from Redis
+      summary: De-authorize user
       tags:
       - User
   /v1/user/sign/up:
     post:
       consumes:
       - application/json
-      description: Create a new user.
+      description: Create a new user given username, email and password
       parameters:
       - description: User Username
         in: body
         name: username
+        required: true
+        schema:
+          type: string
+      - description: User Email
+        in: body
+        name: email
         required: true
         schema:
           type: string
@@ -104,7 +110,7 @@ paths:
           description: ok
           schema:
             type: string
-      summary: create a new user
+      summary: Create a new user
       tags:
       - User
 securityDefinitions:

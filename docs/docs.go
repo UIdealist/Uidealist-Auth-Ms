@@ -31,7 +31,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Renew access and refresh tokens.",
+                "description": "Renew access token",
                 "consumes": [
                     "application/json"
                 ],
@@ -41,7 +41,7 @@ const docTemplate = `{
                 "tags": [
                     "Token"
                 ],
-                "summary": "renew access and refresh tokens",
+                "summary": "Renew access and refresh tokens",
                 "parameters": [
                     {
                         "description": "Refresh token",
@@ -65,7 +65,7 @@ const docTemplate = `{
         },
         "/v1/user/sign/in": {
             "post": {
-                "description": "Auth user and return access and refresh token.",
+                "description": "Log In user and return access and refresh token.",
                 "consumes": [
                     "application/json"
                 ],
@@ -75,11 +75,11 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "auth user and return access and refresh token",
+                "summary": "User Sign In",
                 "parameters": [
                     {
-                        "description": "User Email",
-                        "name": "email",
+                        "description": "User's username",
+                        "name": "username",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -87,7 +87,7 @@ const docTemplate = `{
                         }
                     },
                     {
-                        "description": "User Password",
+                        "description": "User's password'",
                         "name": "password",
                         "in": "body",
                         "required": true,
@@ -113,7 +113,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "De-authorize user and delete refresh token from Redis.",
+                "description": "De-authorize user and delete refresh token from cache.",
                 "consumes": [
                     "application/json"
                 ],
@@ -123,9 +123,9 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "de-authorize user and delete refresh token from Redis",
+                "summary": "De-authorize user",
                 "responses": {
-                    "204": {
+                    "200": {
                         "description": "ok",
                         "schema": {
                             "type": "string"
@@ -136,7 +136,7 @@ const docTemplate = `{
         },
         "/v1/user/sign/up": {
             "post": {
-                "description": "Create a new user.",
+                "description": "Create a new user given username, email and password",
                 "consumes": [
                     "application/json"
                 ],
@@ -146,11 +146,20 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "create a new user",
+                "summary": "Create a new user",
                 "parameters": [
                     {
                         "description": "User Username",
                         "name": "username",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "User Email",
+                        "name": "email",
                         "in": "body",
                         "required": true,
                         "schema": {

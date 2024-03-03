@@ -26,7 +26,7 @@ import (
 // @Success 201 {string} status "ok"
 // @Router /v1/user/sign/up [post]
 func UserSignUp(c *fiber.Ctx) error {
-	signUp := &crud.SignUp{}
+	signUp := &crud.SignUpCredentials{}
 
 	// Checking received data from JSON body.
 	if err := c.BodyParser(signUp); err != nil {
@@ -45,16 +45,13 @@ func UserSignUp(c *fiber.Ctx) error {
 	hashedPassword := utils.GeneratePassword(signUp.Password)
 
 	// Create a new user.
-	user := &models.User{
+	credentials := &models.AuthCredentials{
 		Username: signUp.Username,
 		Password: hashedPassword,
-		Email:    signUp.Email,
-		Verified: false,
-		Member:   models.Member{},
 	}
 
 	// Create a new user in database.
-	err := db.Create(&user).Error
+	err := db.Create(&credentials).Error
 	if err != nil {
 		// Return status 500 and database connection error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -69,7 +66,6 @@ func UserSignUp(c *fiber.Ctx) error {
 		"error": false,
 		"code":  repository.REGISTERED,
 		"msg":   nil,
-		"user":  user,
 	})
 }
 
@@ -85,7 +81,7 @@ func UserSignUp(c *fiber.Ctx) error {
 // @Router /v1/user/sign/in [post]
 func UserSignIn(c *fiber.Ctx) error {
 	// Create a new user auth struct.
-	signIn := &crud.SignIn{}
+	signIn := &crud.SignInCredentials{}
 
 	// Checking received data from JSON body.
 	if err := c.BodyParser(signIn); err != nil {
@@ -101,8 +97,8 @@ func UserSignIn(c *fiber.Ctx) error {
 	db := database.DB
 
 	// Get user by username.
-	var foundedUser models.User
-	err := db.Model(models.User{Username: signIn.Username}).First(&foundedUser).Error
+	var foundedUser models.AuthCredentials
+	err := db.Model(models.AuthCredentials{Username: signIn.Username}).First(&foundedUser).Error
 	if err != nil {
 		// Return, if user not found.
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -303,8 +299,8 @@ func RenewTokens(c *fiber.Ctx) error {
 	db := database.DB
 
 	// Get user by ID.
-	var foundedUser models.User
-	err = db.Model(models.User{ID: userID}).First(&foundedUser).Error
+	var foundUser models.AuthCredentials
+	err = db.Model(models.AuthCredentials{ID: userID}).First(&foundUser).Error
 	if err != nil {
 		// Return, if user not found.
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
