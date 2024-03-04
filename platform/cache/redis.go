@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	"idealist/pkg/utils"
+	"uidealist/pkg/utils"
 
 	"github.com/redis/go-redis/v9"
 )

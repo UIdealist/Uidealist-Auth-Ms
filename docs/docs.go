@@ -44,15 +44,43 @@ const docTemplate = `{
                 "summary": "Renew access and refresh tokens",
                 "parameters": [
                     {
-                        "description": "Refresh token",
-                        "name": "refresh_token",
+                        "description": "Refresh Token Schema",
+                        "name": "data",
                         "in": "body",
                         "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/crud.Renew"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
                         "schema": {
                             "type": "string"
                         }
                     }
+                }
+            }
+        },
+        "/v1/token/verify": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
                 ],
+                "description": "Get user identifier from JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Token"
+                ],
+                "summary": "Get user info",
                 "responses": {
                     "200": {
                         "description": "ok",
@@ -78,21 +106,12 @@ const docTemplate = `{
                 "summary": "User Sign In",
                 "parameters": [
                     {
-                        "description": "User's username",
-                        "name": "username",
+                        "description": "Log In Schema",
+                        "name": "data",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "User's password'",
-                        "name": "password",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/crud.SignInCredentials"
                         }
                     }
                 ],
@@ -149,30 +168,12 @@ const docTemplate = `{
                 "summary": "Create a new user",
                 "parameters": [
                     {
-                        "description": "User Username",
-                        "name": "username",
+                        "description": "Sign Up Schema",
+                        "name": "data",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "User Email",
-                        "name": "email",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "User Password",
-                        "name": "password",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/crud.SignUpCredentials"
                         }
                     }
                 ],
@@ -183,6 +184,55 @@ const docTemplate = `{
                             "type": "string"
                         }
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "crud.Renew": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "crud.SignInCredentials": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
+        "crud.SignUpCredentials": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 255
                 }
             }
         }

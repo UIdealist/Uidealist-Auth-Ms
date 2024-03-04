@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"idealist/app/controllers"
-	"idealist/pkg/middleware"
+	"uidealist/app/controllers"
+	"uidealist/pkg/middleware"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -16,5 +16,6 @@ func PrivateRoutes(a *fiber.App) {
 	route.Post(
 		"/user/sign/out", middleware.JWTProtected(),
 		middleware.JWTExpirationChecker(), controllers.UserSignOut) // de-authorization user
-	route.Post("/token/renew", middleware.JWTProtected(), controllers.RenewTokens) // renew Access & Refresh tokens
+	route.Post("/token/renew", middleware.JWTProtected(), controllers.RenewTokens)  // renew Access & Refresh tokens
+	route.Post("/token/verify", middleware.JWTProtected(), controllers.VerifyToken) // renew Access & Refresh tokens
 }

@@ -1,4 +1,4 @@
-module idealist
+module uidealist
 
 go 1.18
 

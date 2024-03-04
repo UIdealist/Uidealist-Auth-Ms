@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // Tokens struct to describe tokens object.
@@ -19,7 +20,7 @@ type Tokens struct {
 }
 
 // GenerateNewTokens func for generate a new Access & Refresh tokens.
-func GenerateNewTokens(id string) (*Tokens, error) {
+func GenerateNewTokens(id uuid.UUID) (*Tokens, error) {
 	// Generate JWT Access token.
 	accessToken, err := generateNewAccessToken(id)
 	if err != nil {
@@ -40,7 +41,7 @@ func GenerateNewTokens(id string) (*Tokens, error) {
 	}, nil
 }
 
-func generateNewAccessToken(usrID string) (string, error) {
+func generateNewAccessToken(usrID uuid.UUID) (string, error) {
 	// Set secret key from .env file.
 	secret := os.Getenv("JWT_SECRET_KEY")
 

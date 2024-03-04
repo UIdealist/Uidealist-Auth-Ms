@@ -3,15 +3,15 @@ package main
 import (
 	"os"
 
-	"idealist/pkg/configs"
-	"idealist/pkg/middleware"
-	"idealist/pkg/routes"
-	"idealist/pkg/utils"
-	"idealist/platform/database"
+	"uidealist/pkg/configs"
+	"uidealist/pkg/middleware"
+	"uidealist/pkg/routes"
+	"uidealist/pkg/utils"
+	"uidealist/platform/database"
 
 	"github.com/gofiber/fiber/v2"
 
-	_ "idealist/docs" // load API Docs files (Swagger)
+	_ "uidealist/docs" // load API Docs files (Swagger)
 
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 )

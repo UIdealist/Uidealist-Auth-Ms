@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"idealist/pkg/utils"
 	"time"
+	"uidealist/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )

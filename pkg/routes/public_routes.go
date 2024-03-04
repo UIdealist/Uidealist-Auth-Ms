@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"idealist/app/controllers"
+	"uidealist/app/controllers"
 
 	"github.com/gofiber/fiber/v2"
 )

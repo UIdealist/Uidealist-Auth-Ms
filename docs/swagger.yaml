@@ -1,4 +1,38 @@
 basePath: /api
+definitions:
+  crud.Renew:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  crud.SignInCredentials:
+    properties:
+      password:
+        maxLength: 255
+        type: string
+      username:
+        maxLength: 255
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  crud.SignUpCredentials:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      password:
+        maxLength: 255
+        type: string
+      username:
+        maxLength: 255
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
 info:
   contact:
     email: edgardanielgd123@gmail.com
@@ -16,12 +50,12 @@ paths:
       - application/json
       description: Renew access token
       parameters:
-      - description: Refresh token
+      - description: Refresh Token Schema
         in: body
-        name: refresh_token
+        name: data
         required: true
         schema:
-          type: string
+          $ref: '#/definitions/crud.Renew'
       produces:
       - application/json
       responses:
@@ -34,24 +68,35 @@ paths:
       summary: Renew access and refresh tokens
       tags:
       - Token
+  /v1/token/verify:
+    post:
+      consumes:
+      - application/json
+      description: Get user identifier from JWT token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get user info
+      tags:
+      - Token
   /v1/user/sign/in:
     post:
       consumes:
       - application/json
       description: Log In user and return access and refresh token.
       parameters:
-      - description: User's username
+      - description: Log In Schema
         in: body
-        name: username
+        name: data
         required: true
         schema:
-          type: string
-      - description: User's password'
-        in: body
-        name: password
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/crud.SignInCredentials'
       produces:
       - application/json
       responses:
@@ -85,24 +130,12 @@ paths:
       - application/json
       description: Create a new user given username, email and password
       parameters:
-      - description: User Username
+      - description: Sign Up Schema
         in: body
-        name: username
+        name: data
         required: true
         schema:
-          type: string
-      - description: User Email
-        in: body
-        name: email
-        required: true
-        schema:
-          type: string
-      - description: User Password
-        in: body
-        name: password
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/crud.SignUpCredentials'
       produces:
       - application/json
       responses:

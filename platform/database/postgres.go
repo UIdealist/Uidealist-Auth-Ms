@@ -2,10 +2,10 @@ package database
 
 import (
 	"fmt"
-	"idealist/pkg/utils"
 	"os"
 	"strconv"
 	"time"
+	"uidealist/pkg/utils"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"idealist/app/crud"
-	"idealist/app/models"
-	"idealist/pkg/repository"
-	"idealist/pkg/utils"
-	"idealist/platform/cache"
-	"idealist/platform/database"
+	"uidealist/app/crud"
+	"uidealist/app/models"
+	"uidealist/pkg/repository"
+	"uidealist/pkg/utils"
+	"uidealist/platform/cache"
+	"uidealist/platform/database"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -20,9 +20,7 @@ import (
 // @Tags User
 // @Accept json
 // @Produce json
-// @Param username body string true "User Username"
-// @Param email body string true "User Email"
-// @Param password body string true "User Password"
+// @Param data body crud.SignUpCredentials true "Sign Up Schema"
 // @Success 201 {string} status "ok"
 // @Router /v1/user/sign/up [post]
 func UserSignUp(c *fiber.Ctx) error {
@@ -75,8 +73,7 @@ func UserSignUp(c *fiber.Ctx) error {
 // @Tags User
 // @Accept json
 // @Produce json
-// @Param username body string true "User's username"
-// @Param password body string true "User's password'"
+// @Param data body crud.SignInCredentials true "Log In Schema"
 // @Success 200 {string} status "ok"
 // @Router /v1/user/sign/in [post]
 func UserSignIn(c *fiber.Ctx) error {
@@ -97,8 +94,8 @@ func UserSignIn(c *fiber.Ctx) error {
 	db := database.DB
 
 	// Get user by username.
-	var foundedUser models.AuthCredentials
-	err := db.Model(models.AuthCredentials{Username: signIn.Username}).First(&foundedUser).Error
+	var foundUser models.AuthCredentials
+	err := db.Model(models.AuthCredentials{Username: signIn.Username}).First(&foundUser).Error
 	if err != nil {
 		// Return, if user not found.
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -109,7 +106,7 @@ func UserSignIn(c *fiber.Ctx) error {
 	}
 
 	// Compare given user password with stored in found user.
-	compareUserPassword := utils.ComparePasswords(foundedUser.Password, signIn.Password)
+	compareUserPassword := utils.ComparePasswords(foundUser.Password, signIn.Password)
 	if !compareUserPassword {
 		// Return, if password is not compare to stored in database.
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -120,7 +117,7 @@ func UserSignIn(c *fiber.Ctx) error {
 	}
 
 	// Generate a new pair of access and refresh tokens.
-	tokens, err := utils.GenerateNewTokens(foundedUser.ID)
+	tokens, err := utils.GenerateNewTokens(foundUser.ID)
 	if err != nil {
 		// Return status 500 and token generation error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -131,7 +128,7 @@ func UserSignIn(c *fiber.Ctx) error {
 	}
 
 	// Define user ID.
-	userUsername := foundedUser.Username
+	userUsername := foundUser.Username
 
 	// Create a new Redis connection.
 	connRedis, err := cache.RedisConnection()
@@ -202,7 +199,7 @@ func UserSignOut(c *fiber.Ctx) error {
 	}
 
 	// Save refresh token to Redis.
-	errDelFromRedis := connRedis.Del(context.Background(), userID).Err()
+	errDelFromRedis := connRedis.Del(context.Background(), userID.String()).Err()
 	if errDelFromRedis != nil {
 		// Return status 500 and Redis deletion error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -220,13 +217,49 @@ func UserSignOut(c *fiber.Ctx) error {
 	})
 }
 
+// VerifyToken Get user identifier from JWT token
+// @Description Get user identifier from JWT token
+// @Summary Get user info
+// @Tags Token
+// @Accept json
+// @Produce json
+// @Success 200 {string} status "ok"
+// @Security ApiKeyAuth
+// @Router /v1/token/verify [post]
+func VerifyToken(c *fiber.Ctx) error {
+
+	// Get claims from JWT (Credentials case).
+	claims, err := utils.ExtractTokenMetadata(c)
+	if err == nil {
+		// Define user ID.
+		userID := claims.UserID
+
+		// Return status 200, sign out successfull.
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"error":  false,
+			"code":   repository.TOKEN_VERIFIED,
+			"msg":    "Token verified successfully",
+			"userID": userID,
+		})
+	}
+
+	// Check providers tokens and retrieve data from it
+
+	// Return status 500 and JWT parse error.
+	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		"error": true,
+		"code":  repository.ERROR_VERIFYING_TOKEN,
+		"msg":   "Unauthorized",
+	})
+}
+
 // RenewTokens method for renew access and refresh tokens.
 // @Description Renew access token
 // @Summary Renew access and refresh tokens
 // @Tags Token
 // @Accept json
 // @Produce json
-// @Param refresh_token body string true "Refresh token"
+// @Param data body crud.Renew true "Refresh Token Schema"
 // @Success 200 {string} status "ok"
 // @Security ApiKeyAuth
 // @Router /v1/token/renew [post]
@@ -333,7 +366,7 @@ func RenewTokens(c *fiber.Ctx) error {
 	}
 
 	// Save refresh token to Redis.
-	errRedis := connRedis.Set(context.Background(), userID, tokens.Refresh, 0).Err()
+	errRedis := connRedis.Set(context.Background(), userID.String(), tokens.Refresh, 0).Err()
 	if errRedis != nil {
 		// Return status 500 and Redis connection error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
