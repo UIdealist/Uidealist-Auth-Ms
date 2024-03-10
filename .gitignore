@@ -19,3 +19,4 @@ hosts.ini
 *.out
 .env
 .env.*
+!.env.example
