@@ -16,7 +16,7 @@ import (
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 )
 
-// @Idealist API
+// @uIdealist API
 // @version 1.0
 // @description Idealist project API Docs.
 // @termsOfService http://swagger.io/terms/

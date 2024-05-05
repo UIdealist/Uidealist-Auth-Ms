@@ -1,7 +1,12 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
 	"time"
 
 	"uidealist/app/crud"
@@ -14,10 +19,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// UserSignUp method to create a new user.
-// @Description Create a new user given username, email and password
+// UserSignUp method to create a new credentials set for new a user.
+// @Description Create a new user credentials given username, email and password
 // @Summary Create a new user
-// @Tags User
+// @Tags Auth
 // @Accept json
 // @Produce json
 // @Param data body crud.SignUpCredentials true "Sign Up Schema"
@@ -42,20 +47,81 @@ func UserSignUp(c *fiber.Ctx) error {
 	// Generate password hash.
 	hashedPassword := utils.GeneratePassword(signUp.Password)
 
-	// Create a new user.
+	// Create a new user credentials.
 	credentials := &models.AuthCredentials{
 		Username: signUp.Username,
 		Password: hashedPassword,
 	}
 
-	// Create a new user in database.
-	err := db.Create(&credentials).Error
+	// Create user in members microservice.
+	userMicroservice := os.Getenv("MS_USER_SERVICE_ADDR")
+
+	if userMicroservice == "" {
+		return c.Status(
+			fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": true,
+			"code":  repository.MICROSERVICE_ERROR,
+			"msg":   "Couldn't contact with users service",
+		})
+	}
+
+	body, err := json.Marshal(
+		map[string]string{
+			"username": signUp.Username,
+			"email":    signUp.Email,
+		},
+	)
+
+	if err != nil {
+		return c.Status(
+			fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": true,
+			"code":  repository.MICROSERVICE_ERROR,
+			"msg":   "Couldn't build users service input data",
+		})
+	}
+
+	response, err := http.Post(
+		fmt.Sprintf("%s/api/v1/user", userMicroservice),
+		"application/json",
+		bytes.NewBuffer(body),
+	)
+
+	if err != nil {
+		return c.Status(
+			fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": true,
+			"code":  repository.MICROSERVICE_ERROR,
+			"msg":   "Couldn't contact with users service",
+		})
+	}
+
+	defer response.Body.Close()
+
+	data := crud.CreateUserResponse{}
+	err = json.NewDecoder(response.Body).Decode(&data)
+
+	if err != nil {
+		return c.Status(
+			fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": true,
+			"code":  repository.MICROSERVICE_ERROR,
+			"msg":   "Couldn't parse users service response",
+		})
+	}
+
+	if data.Error {
+		return c.Status(response.StatusCode).JSON(data)
+	}
+
+	// Create a new user credentials in database.
+	err = db.Create(&credentials).Error
 	if err != nil {
 		// Return status 500 and database connection error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.DATABASE_ERROR,
-			"msg":   err.Error(),
+			"msg":   "Couldn't create user in database",
 		})
 	}
 
@@ -63,14 +129,14 @@ func UserSignUp(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"error": false,
 		"code":  repository.REGISTERED,
-		"msg":   nil,
+		"msg":   "User registered successfully",
 	})
 }
 
 // UserSignIn method to auth user and return access and refresh tokens.
 // @Description Log In user and return access and refresh token.
 // @Summary User Sign In
-// @Tags User
+// @Tags Auth
 // @Accept json
 // @Produce json
 // @Param data body crud.SignInCredentials true "Log In Schema"
@@ -86,7 +152,7 @@ func UserSignIn(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.INVALID_DATA,
-			"msg":   err.Error(),
+			"msg":   "Invalid form data",
 		})
 	}
 
@@ -123,7 +189,7 @@ func UserSignIn(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.ERROR_RETREIVING_TOKEN,
-			"msg":   err.Error(),
+			"msg":   "Couldn't generate tokens",
 		})
 	}
 
@@ -137,7 +203,7 @@ func UserSignIn(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.CACHE_ERROR,
-			"msg":   err.Error(),
+			"msg":   "Couldn't connect to Redis",
 		})
 	}
 
@@ -148,7 +214,7 @@ func UserSignIn(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.CACHE_ERROR,
-			"msg":   errSaveToRedis.Error(),
+			"msg":   "Couldn't save token to Redis",
 		})
 	}
 
@@ -166,7 +232,7 @@ func UserSignIn(c *fiber.Ctx) error {
 // UserSignOut De-authorize user and delete refresh token from cache.
 // @Description De-authorize user and delete refresh token from cache.
 // @Summary De-authorize user
-// @Tags User
+// @Tags Auth
 // @Accept json
 // @Produce json
 // @Success 200 {string} status "ok"
@@ -180,7 +246,7 @@ func UserSignOut(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.INVALID_DATA,
-			"msg":   err.Error(),
+			"msg":   "Invalid token",
 		})
 	}
 
@@ -194,7 +260,7 @@ func UserSignOut(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.CACHE_ERROR,
-			"msg":   err.Error(),
+			"msg":   "Couldn't connect to Redis",
 		})
 	}
 
@@ -205,7 +271,7 @@ func UserSignOut(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.CACHE_ERROR,
-			"msg":   errDelFromRedis.Error(),
+			"msg":   "Couldn't delete token from Redis",
 		})
 	}
 
@@ -274,7 +340,7 @@ func RenewTokens(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.ERROR_RETREIVING_TOKEN,
-			"msg":   err.Error(),
+			"msg":   "Invalid token",
 		})
 	}
 
@@ -300,7 +366,7 @@ func RenewTokens(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.INVALID_DATA,
-			"msg":   err.Error(),
+			"msg":   "Invalid form data",
 		})
 	}
 
@@ -311,7 +377,7 @@ func RenewTokens(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.ERROR_RETREIVING_TOKEN,
-			"msg":   err.Error(),
+			"msg":   "Invalid token",
 		})
 	}
 	// Checking, if now time greather than Refresh token expiration time.
@@ -350,7 +416,7 @@ func RenewTokens(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.ERROR_RETREIVING_TOKEN,
-			"msg":   err.Error(),
+			"msg":   "Couldn't generate tokens",
 		})
 	}
 
@@ -361,7 +427,7 @@ func RenewTokens(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.CACHE_ERROR,
-			"msg":   err.Error(),
+			"msg":   "Couldn't connect to Redis",
 		})
 	}
 
@@ -372,7 +438,7 @@ func RenewTokens(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"code":  repository.CACHE_ERROR,
-			"msg":   errRedis.Error(),
+			"msg":   "Couldn't save token to Redis",
 		})
 	}
 

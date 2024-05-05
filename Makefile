@@ -46,7 +46,7 @@ docker.fiber: docker.fiber.build
 		--name ${APP_NAME} \
 		--network ${NETWORK_NAME} \
 		--env-file .env \
-		-p 5000:5000 \
+		-p 5001:5000 \
 		${APP_NAME}
 
 # Database for test purposes
@@ -78,6 +78,9 @@ docker.stop.postgres:
 
 docker.stop.redis:
 	docker stop ${APP_NAME}-redis
+
+swag.generate:
+	swag init
 
 docker.run: docker.postgres docker.redis docker.fiber
 docker.stop: docker.stop.fiber docker.stop.postgres docker.stop.redis

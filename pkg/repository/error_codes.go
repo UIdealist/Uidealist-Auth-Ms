@@ -11,4 +11,5 @@ const (
 	ERROR_LOGGING_OUT      string = "auth_could_not_log_out"
 	ERROR_RETREIVING_TOKEN string = "auth_invalid_token"
 	ERROR_VERIFYING_TOKEN  string = "auth_invalid_token"
+	MICROSERVICE_ERROR     string = "microservice_error"
 )
